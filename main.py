@@ -1,6 +1,8 @@
 import exceptions
 import settings
 import showcaser
+import helpy
+
 import sys
 import random
 import time
@@ -57,12 +59,14 @@ class MainWindow(QMainWindow):
         #Свойства, переменные и тд
         self.a = -5
         self.b = 5
-        self.eps = 1
+        self.eps = 0.001
         self.extremum_bool = True
         self.showcase_mode = False
         self.settings_opened = False
+        self.help_opened = False
         self.selected_expoint = None
         self.settings_window = None
+        self.help_window = None
         self.lines = []
         self.borders = []
         #self.last_positions = [ [x,y,scalex, scaley] ]
@@ -72,6 +76,12 @@ class MainWindow(QMainWindow):
         self.top_label = QLabel()
         self.top_label.setText("Метод Фиббоначи\n")
         self.top_label.setMouseTracking(True)
+        self.top_label.setAlignment(Qt.AlignmentFlag.AlignBottom)
+
+        self.help_button = QPushButton("?")
+        self.help_button.setMouseTracking(True)
+        self.help_button.setFixedSize(24, 24)
+        self.help_button.released.connect(self.open_help)
 
         #Header
         self.n_label = QLabel()
@@ -116,7 +126,10 @@ class MainWindow(QMainWindow):
         
         #Нижняя линия (строка и выбор функций)
         self.function_box = QComboBox()
+        self.function_box.setStyleSheet("combobox-popup: 0")
+        self.function_box.setMaxCount(15)
         self.function_box.setMinimumContentsLength(10)
+        self.function_box.setMaxVisibleItems(10)
         self.function_box.activated.connect(lambda: self.draw_function(parse_expr(self.function_box.currentText(), transformations="all")))
         self.function_box.setMouseTracking(True)
 
@@ -140,12 +153,17 @@ class MainWindow(QMainWindow):
         self.settings_button.setMouseTracking(True)
 
         #Лейауты
+        layout_header = QHBoxLayout()
         layout_top = QFormLayout()
         layout_bottom = QHBoxLayout()
         layout_n = QHBoxLayout()
         layout_extremum = QHBoxLayout()
         
         #Размещение виджетов на экране
+        layout_header.addWidget(self.top_label)
+        layout_header.addWidget(self.help_button)
+        layout_header.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
         layout_bottom.addWidget(self.function_box)
         layout_bottom.addWidget(self.function_input)
         layout_bottom.addWidget(self.delete_button)
@@ -164,7 +182,7 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(layout_top)
 
-        layout_top.addWidget(self.top_label)
+        layout_top.addRow(layout_header)
         layout_top.addRow(layout_n)
         layout_top.addRow(layout_extremum)
         layout_top.addWidget(self.pw)
@@ -196,7 +214,22 @@ class MainWindow(QMainWindow):
             else:
                 self.settings_window.setWindowState(Qt.WindowState.WindowActive)
             
+    def open_help(self):
+        print(self.help_opened)
+        if(not(self.help_opened)):
+            print("executed")
+            self.help_opened = True
+            self.help_window = helpy.HelpPopup(self)
+            
+            self.help_window.show()
+            print(self.help_opened)
         
+        else:
+            if self.help_window.windowState() == Qt.WindowState.WindowActive or self.help_window.windowState() == Qt.WindowState.WindowNoState:
+                self.help_window.setWindowState(Qt.WindowState.WindowMinimized)
+            else:
+                self.help_window.setWindowState(Qt.WindowState.WindowActive)
+
     def get_typed_function(self):
         print("че за Х")
         try:
@@ -272,10 +305,15 @@ class MainWindow(QMainWindow):
         result = self.fib_method(equation, self.extremum_bool)
         m = result[0]
         n = result[1]
-        
+
+        numbers_after_dot = len(str(self.eps))-2
+        if numbers_after_dot >= 0:
+            formatted_value = '{0:.' +  str(numbers_after_dot) + 'f}'
+        else:
+            formatted_value = '1'
         self.n_value_label.setText(str(n))
-        self.extremum_value_label.setText('{0:.10f}'.format(m))
-        self.y_extremum_value_label.setText('{0:.10f}'.format(equation.subs(x, m)))
+        self.extremum_value_label.setText(formatted_value.format(m))
+        self.y_extremum_value_label.setText(formatted_value.format(equation.subs(x, m)))
         
         scatter = pg.ScatterPlotItem(hoverable=True, tip='x: {x:.3g}\ny: {y:.3g}\ndata={data}'.format)
         
@@ -305,10 +343,14 @@ class MainWindow(QMainWindow):
         
         equation = self.get_typed_function()
 
-        if(equation == 0):
+        if equation == 0:
             QMessageBox.critical(None, "Ошибка", "Неправильный формат функции")
             return
-
+        print(self.function_box.count())
+        if self.function_box.maxCount() == self.function_box.count():
+            QMessageBox.critical(None, "Ошибка", f"Добавлять в список можно максимум {self.function_box.maxCount()} функций!\nДля того, чтобы добавить новую функцию, удалите прежние.")
+            return
+            
         self.function_box.addItem(self.function_input.text(), [self.a, self.b])
         self.function_box.setCurrentText(self.function_input.text())
         self.draw_function(equation)
@@ -377,10 +419,8 @@ class MainWindow(QMainWindow):
         for i in range(2, n+2):
             fib.append(fib[i-1] + fib[i-2])
 
-        #a = self.pw_list[equation].getData()[0][1]-0.1
         a = self.a
         b = self.b
-        #b = self.pw_list[equation].getData()[0][-1]
 
         estimated_eps = (b-a)/fib[n+1]
 

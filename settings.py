@@ -115,7 +115,7 @@ class SettingsPopup(QWidget):
                 needToRedraw = True
                 
             if(a > b): raise exceptions.InvalidRangeException
-            if(eps <= 0): raise exceptions.InvalidNumberException
+            if(eps <= 0 or eps > 1): raise exceptions.InvalidNumberException
                
             self.main.a = a
             self.main.b = b
@@ -134,7 +134,7 @@ class SettingsPopup(QWidget):
             print("DEBUG: значение 'a' дожно быть строго больше 'b'.")
 
         except exceptions.InvalidNumberException:
-            QMessageBox.critical(None, "Ошибка", "Значение 'eps' должно быть строго больше 0.")
+            QMessageBox.critical(None, "Ошибка", "Значение 'eps' должно быть строго больше 0 и не более 1.")
             print("DEBUG: погрешность 'eps' должна быть больше 0.")
 
         except ValueError:
