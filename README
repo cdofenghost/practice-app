@@ -1,0 +1,19 @@
+RUS:
+Приложение для нахождения точки максимума/минимума функции f(x, y) с помощью метода Фибоначчи.
+
+Возможности:
+- Добавление/удаление функций
+- Выбор точности определения значения точки экстремума
+- Графическое отображение работы численного метода Фибоначчи
+
+Разработчик: Константин Денисов
+
+ENG:
+Application for finding the maximum/minimum point of a function.
+
+Possibilities:
+- Add/remove functions
+- Selecting the accuracy of determining the value of the extremum point
+- Graphic display of the work of the numerical Fibonacci method
+
+Developer: Konstantin Denisov
